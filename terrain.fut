@@ -1,6 +1,6 @@
 import "lib/github.com/athas/matte/colour"
 import "lib/github.com/diku-dk/cpprandom/random"
-import "types"
+import "raster_types"
 import "hsv"
 
 module rnge = xorshift128plus

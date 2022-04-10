@@ -1,21 +1,16 @@
 import "lib/github.com/athas/matte/colour"
 import "types"
+import "raster_types"
 import "scanline"
-
-def bubble_point
-    (a: point_projected)
-    (b: point_projected): (point_projected, point_projected) =
-  if b.projected.y < a.projected.y then (b, a) else (a, b)
-
-def normalize_triangle_points ((p, q, r): triangle_projected): triangle_projected =
-  let (p, q) = bubble_point p q
-  let (q, r) = bubble_point q r
-  let (p, q) = bubble_point p q
-  in (p, q, r)
+import "barycentric"
 
 def prepare_triangles [n] (triangles: [n]triangle_projected): [n]triangle_slopes =
   map normalize_triangle_points triangles
-  |> map (\triangle -> triangle_slopes triangle)
+  |> map (\(triangle: triangle_projected) ->
+            ({bary={u=1, v=0}, extra=triangle.0},
+             {bary={u=0, v=1}, extra=triangle.1},
+             {bary={u=0, v=0}, extra=triangle.2}))
+  |> map triangle_slopes
 
 def rotate_x ({sin, cos}: trig)
              ({x, y, z}: vec3.vector): vec3.vector =
@@ -130,25 +125,32 @@ def render_projected_triangles [n] 'a
     (pixel_color: pixel_color_function a)
     (aux: [n]a)
     (aux_empty: a): [h][w]argb.colour =
-  let lines = lines_of_triangles triangles_prepared aux
-  let points = points_of_lines lines
-  let points' = filter (\(p, _) ->
-                          p.projected.x >= 0 && p.projected.x < i32.i64 w
-                          && p.projected.y >=0 && p.projected.y < i32.i64 h) points
-  let indices = map (\(p, _) -> i64.i32 p.projected.y * w + i64.i32 p.projected.x) points'
-  let points'' = map (\(p, aux) -> ({projected={i=p.projected.y * i32.i64 w + p.projected.x}, z=z_inv p.z,
-                                     world={x=p.world.x, y=p.world.y, z=z_inv p.world.z}}, aux)) points'
-  let empty = ({projected={i= -1}, z= -f32.inf, world={x= -f32.inf, y= -f32.inf, z= -f32.inf}}, aux_empty)
+  let aux' = zip (map i32.i64 (0..<n)) aux
+  let points =
+    lines_of_triangles triangles_prepared aux'
+    |> points_of_lines
+    |> filter (\(p, _) ->
+                 let {x, y} = p.extra
+                 in x >= 0 && x < i32.i64 w
+                    && y >=0 && y < i32.i64 h)
+  let coordinates =
+    map (\(p, _) -> (i64.i32 p.extra.y, i64.i32 p.extra.x)) points
+  let points =
+    map (\(p, (aux_internal, aux)) ->
+           let z_inv = interpolate p.bary triangles_prepared[aux_internal] (.extra.z_inv)
+           let p' = {extra={i=aux_internal, z=1 / z_inv},
+                     bary=p.bary}
+           in (p', aux))
+        points
 
-  let z_check ((a, aux_a): (point_projected_1d, a))
-              ((b, aux_b): (point_projected_1d, a))
-              : (point_projected_1d, a) =
-    if (a.z >= 0 && a.z < b.z) || b.z < 0
+  let z_check ((a, aux_a): (pixel_final, a))
+              ((b, aux_b): (pixel_final, a)): (pixel_final, a) =
+    if (a.extra.z >= 0 && a.extra.z < b.extra.z) || b.extra.z < 0
     then (a, aux_a)
     else (b, aux_b)
 
-  let pixels = replicate (h * w) empty
-  -- FIXME: Use reduce_by_index_2d instead.
-  let pixels' = reduce_by_index pixels z_check empty indices points''
-  let pixels'' = map pixel_color pixels'
-  in unflatten h w pixels''
+  let empty = ({extra={i= -1, z= -f32.inf},
+                bary={u= -1, v= -1}}, aux_empty)
+  in reduce_by_index_2d (replicate h (replicate w empty))
+                        z_check empty coordinates points
+     |> map (map pixel_color)

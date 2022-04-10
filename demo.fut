@@ -1,6 +1,8 @@
 import "lib/github.com/diku-dk/lys/lys"
 import "types"
+import "raster_types"
 import "raster3d"
+import "barycentric"
 import "terrain"
 import "hsv"
 
@@ -100,24 +102,29 @@ module lys: lys with text_content = text_content = {
       type aux = argb.colour
       def empty_aux = argb.white
       def triangles_aux colors = colors
-      def pixel_color ((_p, color): (point_projected_1d, argb.colour)): argb.colour = color
+      def pixel_color ((_p, color): (pixel_final, argb.colour)): argb.colour = color
     }
 
     module by_depth = {
       type aux = ()
       def empty_aux = ()
       def triangles_aux [n] (_: [n]triangle_slopes): [n]() = replicate n ()
-      def pixel_color (draw_dist: f32) ((p, _aux): (point_projected_1d, ())): argb.colour =
-        argb.gray (pixel_depth draw_dist p.z)
+      def pixel_color (draw_dist: f32) ((p, _aux): (pixel_final, ())): argb.colour =
+        argb.gray (pixel_depth draw_dist p.extra.z)
     }
 
     module by_height = {
-      type aux = ()
+      type aux = triangle_slopes
       def empty_aux = ()
       def triangles_aux [n] (_: [n]triangle_slopes): [n]() = replicate n ()
-      def pixel_color (y_min: f32) (y_span: f32) (draw_dist: f32) ((p, _aux): (point_projected_1d, ())): argb.colour =
-        let f = (p.world.y - y_min) / y_span
-        in hsv_to_rgb (360 * f, 1 - pixel_depth draw_dist p.z, 0.5)
+      def pixel_color (y_min: f32) (y_span: f32) (draw_dist: f32) (ts: []triangle_slopes) ((p, _aux): (pixel_final, ())): argb.colour =
+        let h = if p.extra.i == -1
+                then 0
+                else let t = ts[p.extra.i]
+                     let world_y = interpolate p.bary t (.extra.world.y)
+                     let f = (world_y - y_min) / y_span
+                     in 360 * f
+        in hsv_to_rgb (h, 1 - pixel_depth draw_dist p.extra.z, 0.5)
     }
   }
 
@@ -138,7 +145,8 @@ module lys: lys with text_content = text_content = {
                           s.h s.w triangles_slopes
                           (pixel_color.by_height.pixel_color s.triangles_coloured.1.0
                                                              (s.triangles_coloured.1.1 - s.triangles_coloured.1.0)
-                                                             s.draw_dist)
+                                                             s.draw_dist
+                                                             triangles_slopes)
                           (pixel_color.by_height.triangles_aux triangles_slopes)
                           pixel_color.by_height.empty_aux
 
