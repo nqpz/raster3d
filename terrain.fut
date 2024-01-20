@@ -57,7 +57,7 @@ def generate_terrain
   -- Make random spikes.
   let rngs = rnge.rng_from_seed [seed]
              |> rnge.split_rng (depth * width)
-             |> unflatten depth width
+             |> unflatten
   let (rngs, points') =
     map2 (map2 (\rng (p: vec3.vector) ->
                   let (rng, y') = dist.rand (-fluct / 2, fluct / 2) rng
@@ -102,7 +102,7 @@ def generate_terrain
   let triangles = triangles :> [n_triangles0][n_triangles1]triangle
   let rngs = rng
              |> rnge.split_rng (n_triangles0 * n_triangles1)
-             |> unflatten n_triangles0 n_triangles1
+             |> unflatten
   let triangles_coloured =
     map2 (map2 (\rng t ->
                   let h = 360.0 * ((t.0.y - min_y) / (max_y - min_y))
