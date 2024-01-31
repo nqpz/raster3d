@@ -13,24 +13,26 @@ type keys_state = {shift: bool, alt: bool, ctrl: bool, down: bool, up: bool, lef
 
 type navigation = #mouse | #keyboard
 
-type pixel_color_approach = #by_triangle
-                          | #by_depth
-                          | #by_height
+module pixel_color_picker = {
+  type pixel_color_approach = #by_triangle
+                            | #by_depth
+                            | #by_height
 
-def n_pixel_color_approaches = 3i32
+  def n_pixel_color_approaches = 3i32
 
-def pixel_color_id (approach: pixel_color_approach): i32 =
-  match approach
-  case #by_triangle -> 0
-  case #by_depth -> 1
-  case #by_height -> 2
+  def pixel_color_id (approach: pixel_color_approach): i32 =
+    match approach
+    case #by_triangle -> 0
+    case #by_depth -> 1
+    case #by_height -> 2
 
-def pixel_color_approach (i: i32): pixel_color_approach =
-  match i
-  case 0 -> #by_triangle
-  case 1 -> #by_depth
-  case 2 -> #by_height
-  case _ -> assert false #by_triangle
+  def pixel_color_approach (i: i32): pixel_color_approach =
+    match i
+    case 0 -> #by_triangle
+    case 1 -> #by_depth
+    case 2 -> #by_height
+    case _ -> assert false #by_triangle
+}
 
 def camera_to_euler (camera: camera_quaternion): camera =
   {position=camera.position,
@@ -47,7 +49,7 @@ module lys: lys with text_content = text_content = {
                  triangles_in_view: [](triangle_slopes, argb.colour),
                  keys: keys_state,
                  navigation: navigation,
-                 pixel_color_approach: pixel_color_approach}
+                 pixel_color_approach: pixel_color_picker.pixel_color_approach}
 
   type text_content = text_content
 
@@ -69,7 +71,7 @@ module lys: lys with text_content = text_content = {
      (match s.navigation
       case #mouse -> 0
       case #keyboard -> 1),
-     pixel_color_id s.pixel_color_approach)
+     pixel_color_picker.pixel_color_id s.pixel_color_approach)
 
   def text_colour = const argb.black
 
@@ -237,8 +239,9 @@ module lys: lys with text_content = text_content = {
     def down (key: i32) (s: state): state =
       if key == SDLK_TAB
       then if s.keys.ctrl
-           then s with pixel_color_approach = pixel_color_approach ((pixel_color_id s.pixel_color_approach + 1)
-                                                                    % n_pixel_color_approaches)
+           then s with pixel_color_approach = pixel_color_picker.pixel_color_approach
+                                              ((pixel_color_picker.pixel_color_id s.pixel_color_approach + 1)
+                                               % pixel_color_picker.n_pixel_color_approaches)
            else s with navigation = match s.navigation
                                     case #mouse -> #keyboard
                                     case #keyboard -> #mouse
