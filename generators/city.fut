@@ -23,6 +23,8 @@ def generate (_seed: i32): ([](triangle, argb.colour), (f32, f32)) =
   let triangles =
     flatten [ r
             , r |> map (rotate_triangle (vec3.zero with y = f32.pi / 2) vec3.zero)
+            , r |> map (rotate_triangle (vec3.zero with y = f32.pi) vec3.zero)
+            , r |> map (rotate_triangle (vec3.zero with y = f32.pi * 1.5) vec3.zero)
             ]
 
   let colors = map (const (argb.gray 0.6)) triangles
