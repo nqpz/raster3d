@@ -16,18 +16,22 @@ def rectangle (x0: f32) (y0: f32) (w: f32) (h: f32): [2]triangle =
   let t1 = (p1, p2, p3)
   in [t0, t1]
 
+def cube (origo: vec3.vector) (size: f32): [6 * 2]triangle =
+  let radius = size / 2
+  let r = rectangle (origo.x - radius) (origo.y - radius) size size
+          |> map (translate_triangle {x=0, y=0, z=origo.z + radius})
+  in flatten [ r
+             , r |> map (rotate_triangle (vec3.zero with y = f32.pi) origo)
+             , r |> map (rotate_triangle (vec3.zero with y = f32.pi * 0.5) origo)
+             , r |> map (rotate_triangle (vec3.zero with y = f32.pi * 1.5) origo)
+             , r |> map (rotate_triangle (vec3.zero with x = f32.pi * 0.5) origo)
+             , r |> map (rotate_triangle (vec3.zero with x = f32.pi * 1.5) origo)
+             ]
+
 def generate (_seed: i32): ([](triangle, argb.colour), (f32, f32)) =
-  let r =
-    rectangle (-100) (-100) 200 200
-    |> map (translate_triangle {x=0, y=0, z=100})
-  let triangles =
-    flatten [ r
-            , r |> map (rotate_triangle (vec3.zero with y = f32.pi * 0.5) vec3.zero)
-            , r |> map (rotate_triangle (vec3.zero with y = f32.pi) vec3.zero)
-            , r |> map (rotate_triangle (vec3.zero with y = f32.pi * 1.5) vec3.zero)
-            , r |> map (rotate_triangle (vec3.zero with x = f32.pi * 0.5) vec3.zero)
-            , r |> map (rotate_triangle (vec3.zero with x = f32.pi * 1.5) vec3.zero)
-            ]
+  let origo = vec3.zero
+  let size = 200
+  let triangles = cube origo size
 
   let colors = map (const (argb.gray 0.6)) triangles
 
