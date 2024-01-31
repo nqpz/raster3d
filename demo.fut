@@ -3,7 +3,10 @@ import "types"
 import "raster_types"
 import "raster3d"
 import "rendering"
-import "terrain"
+
+module generators = {
+  module terrain = import "generators/terrain"
+}
 
 type keys_state = {shift: bool, alt: bool, ctrl: bool, down: bool, up: bool, left: bool, right: bool,
                    pagedown: bool, pageup: bool, space: bool}
@@ -72,13 +75,14 @@ module lys: lys with text_content = text_content = {
 
   def grab_mouse = true
 
-  def init (terrain_seed: u32) (h: i64) (w: i64): state =
+  def init (seed: u32) (h: i64) (w: i64): state =
+    let seed = i32.u32 seed
     let view_dist = 600
     let draw_dist = 100000
     let camera = {position={x=150000, y= -4000, z=100000},
                   orientation=qe_conversions.euler_to_quaternion vec3.zero}
 
-    let triangles_coloured = generate_terrain 1000 1000 300 100000 64 3 (i32.u32 terrain_seed)
+    let triangles_coloured = generators.terrain.generate 1000 1000 300 100000 64 3 seed
     let triangles_in_view = project_triangles_in_view h w view_dist draw_dist
                                                       (camera_to_euler camera) triangles_coloured.0
     in {w, h,

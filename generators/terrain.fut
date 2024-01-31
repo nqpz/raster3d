@@ -1,7 +1,7 @@
-import "lib/github.com/athas/matte/colour"
-import "lib/github.com/diku-dk/cpprandom/random"
-import "raster_types"
-import "hsv"
+import "../lib/github.com/athas/matte/colour"
+import "../lib/github.com/diku-dk/cpprandom/random"
+import "../raster_types"
+import "../hsv"
 
 module rnge = xorshift128plus
 module dist = uniform_real_distribution f32 rnge
@@ -33,7 +33,7 @@ def mix8 (a: hsv) (b: hsv) (c: hsv) (d: hsv) (e: hsv) (f: hsv) (g: hsv) (h: hsv)
   in m (m (m a b) (m c d)) (m (m e f) (m g h))
 
 -- | A very simple terrain generator.
-def generate_terrain
+def generate
   (depth: i64)
   (width: i64)
   (size: i64)
@@ -147,6 +147,6 @@ entry benchmark
   (smooth_iterations_areas: i32)
   (smooth_iterations_colours: i32)
   (seed: i32): ([]triangle, []argb.colour, f32, f32) =
-  let (a, b) = generate_terrain depth width size fluct smooth_iterations_areas smooth_iterations_colours seed
+  let (a, b) = generate depth width size fluct smooth_iterations_areas smooth_iterations_colours seed
   let (a0, a1) = unzip a
   in (a0, a1, b.0, b.1)
