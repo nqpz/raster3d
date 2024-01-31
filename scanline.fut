@@ -28,25 +28,37 @@ def neg_slope (s: slope): slope =
   {extra={x= -s.extra.x},
    bary={u= -s.bary.u, v= -s.bary.v}}
 
-def triangle_slopes ((p, q, r): triangle_projected_with_bary): triangle_slopes =
-  {n_lines=r.extra.projected.y - p.extra.projected.y + 1,
-   y=p.extra.projected.y,
-   y_subtracted_p_y={q=q.extra.projected.y - p.extra.projected.y,
-                     r=r.extra.projected.y - p.extra.projected.y},
-   p={extra={x=p.extra.projected.x, world=p.extra.world, z_inv=1 / p.extra.z},
+def triangle_slopes
+    (h: i32)
+    (view_dist: f32)
+    ((p, q, r): triangle_projected_with_bary): triangle_slopes =
+  let ry = r.extra.projected.y
+  let py = p.extra.projected.y
+
+  -- Don't consider lines that will not be rendered.
+  let i_start = if py < 0 then -py else 0
+  let n_lines = ry - py + 1 - i_start
+  let n_lines = i32.min (i32.max n_lines 0) h
+  in {i_start,
+      n_lines,
+   y=py,
+   y_subtracted_p_y={q=q.extra.projected.y - py,
+                     r=ry - py},
+   p={extra={x=p.extra.projected.x, world=p.extra.world, z_inv=1 / (p.extra.z + view_dist)},
       bary=p.bary},
-   q={extra={x=q.extra.projected.x, world=q.extra.world, z_inv=1 / q.extra.z},
+   q={extra={x=q.extra.projected.x, world=q.extra.world, z_inv=1 / (q.extra.z + view_dist)},
       bary=q.bary},
-   r={extra={x=r.extra.projected.x, world=r.extra.world, z_inv=1 / r.extra.z},
+   r={extra={x=r.extra.projected.x, world=r.extra.world, z_inv=1 / (r.extra.z + view_dist)},
       bary=r.bary},
    s1=slope p q,
    s2=slope p r,
    s3=neg_slope (slope q r)}
 
 def get_line_in_triangle 'a
+    (w: i32)
     ((t, aux): (triangle_slopes, a))
     (i: i64): (line, a) =
-  let i = i32.i64 i
+  let i = t.i_start + i32.i64 i
   let y = t.y + i
   let half (p: slope_point) (s1: slope) (s2: slope) (i': f32): (line, a) =
     let x1 = p.extra.x + t32 (f32.round (s1.extra.x * i'))
@@ -59,6 +71,16 @@ def get_line_in_triangle 'a
     let bary_v2 = f32.mad s2.bary.v i' p.bary.v
 
     let n_points = 1 + i32.abs (x2 - x1)
+
+    -- Don't consider pixels that will not be rendered.
+    let (x1, i_start) =
+      if x == 1 && x1 < 0
+      then (0, -x1)
+      else if x == -1 && x1 >= w
+      then (w - 1, x1 - w)
+      else (x1, 0)
+    let n_points = i32.max 0 (n_points - i_start)
+    let n_points = i32.min n_points w
     let n_points' = r32 n_points
 
     let bary_u = (bary_u2 - bary_u1) / n_points'
@@ -76,16 +98,18 @@ def get_line_in_triangle 'a
      else half t.r (neg_slope t.s2) t.s3 (r32 (t.y_subtracted_p_y.r - i)) -- lower half
 
 def lines_of_triangles 'a [n]
+    (w: i64)
     (triangles: [n]triangle_slopes)
     (aux: [n]a): [](line, a) =
-  expand (\(t, _) -> i64.i32 t.n_lines) get_line_in_triangle (zip triangles aux)
+  expand (\(t, _) -> i64.i32 t.n_lines) (get_line_in_triangle (i32.i64 w)) (zip triangles aux)
 
 def points_in_line 'a ((line, _): (line, a)): i64 =
   i64.i32 line.n_points
 
 def get_point_in_line 'a ((l, aux): (line, a)) (i: i64): (point_projected_final, a) =
-  let i' = f32.i64 i
-  in ({extra={x=l.leftmost.extra.x + l.step.extra.x * i32.i64 i,
+  let i = i32.i64 i
+  let i' = r32 i
+  in ({extra={x=l.leftmost.extra.x + l.step.extra.x * i,
               y=l.y},
        bary={u=l.leftmost.bary.u + l.step.bary.u * i',
              v=l.leftmost.bary.v + l.step.bary.v * i'}},

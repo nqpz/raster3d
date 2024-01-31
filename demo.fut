@@ -93,10 +93,11 @@ module lys: lys with text_content = text_content = {
     s with h = h with w = w
 
   module pixel_color = {
+    def view_dist = 0f32
     def pixel_depth (draw_dist: f32) (z: f32): f32 =
-      if z < 0
+      if z < -view_dist
       then 1
-      else z / draw_dist
+      else (z + view_dist) / (draw_dist + view_dist)
 
     module by_triangle = {
       type aux = argb.colour

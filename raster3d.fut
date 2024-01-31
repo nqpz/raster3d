@@ -4,13 +4,16 @@ import "raster_types"
 import "scanline"
 import "barycentric"
 
-def prepare_triangles [n] (triangles: [n]triangle_projected): [n]triangle_slopes =
+def prepare_triangles [n]
+    (h: i64)
+    (view_dist: f32)
+    (triangles: [n]triangle_projected): [n]triangle_slopes =
   map normalize_triangle_points triangles
   |> map (\(triangle: triangle_projected) ->
             ({bary={u=1, v=0}, extra=triangle.0},
              {bary={u=0, v=1}, extra=triangle.1},
              {bary={u=0, v=0}, extra=triangle.2}))
-  |> map triangle_slopes
+  |> map (triangle_slopes (i32.i64 h) view_dist)
 
 def rotate_x ({sin, cos}: trig)
              ({x, y, z}: vec3.vector): vec3.vector =
@@ -71,9 +74,9 @@ def project_triangle
     (world: triangle): triangle_projected =
 
   let project_point ({x, y, z}: vec3.vector): point_2d =
-    let z_ratio = if z >= 0.0
+    let z_ratio = if z > -view_dist
                   then (view_dist + z) / view_dist
-                  else 1.0 / ((view_dist - z) / view_dist)
+                  else (-view_dist - z) / view_dist
     let x_projected = x / z_ratio + w_half
     let y_projected = y / z_ratio + h_half
     in {x=t32 (f32.round x_projected), y=t32 (f32.round y_projected)}
@@ -96,7 +99,7 @@ def project_triangles_in_view 'a
   let triangles_projected = map (project_triangle (f32.i64 h / 2) (f32.i64 w / 2) view_dist camera) triangles
 
   let close_enough_dist (p: point_projected): bool =
-    0.0 <= p.z && p.z < draw_dist
+    -view_dist < p.z && p.z < draw_dist
 
   let close_enough_fully_out_of_frame
       ((p0, p1, p2): triangle_projected): bool =
@@ -114,7 +117,7 @@ def project_triangles_in_view 'a
   let aux = map (.1) triangles_with_aux
   let (triangles_projected', aux') =
     unzip (filter (close_enough <-< (.0)) (zip triangles_projected aux))
-  let triangles_slopes = prepare_triangles triangles_projected'
+  let triangles_slopes = prepare_triangles h view_dist triangles_projected'
   in zip triangles_slopes aux'
 
 -- | Render projected triangles using expand and reduce_by_index.
@@ -127,7 +130,7 @@ def render_projected_triangles [n] 'a
     (aux_empty: a): [h][w]argb.colour =
   let aux' = zip (map i32.i64 (0..<n)) aux
   let points =
-    lines_of_triangles triangles_prepared aux'
+    lines_of_triangles w triangles_prepared aux'
     |> points_of_lines
     |> filter (\(p, _) ->
                  let {x, y} = p.extra
@@ -145,11 +148,26 @@ def render_projected_triangles [n] 'a
 
   let z_check ((a, aux_a): (pixel_final, a))
               ((b, aux_b): (pixel_final, a)): (pixel_final, a) =
-    if (a.extra.z >= 0 && a.extra.z < b.extra.z) || b.extra.z < 0
+    -- Handle negative and positive z values as two separate groups: Always
+    -- prioritize showing the non-negative z pixels, but if there are none, then
+    -- show the closest negative one.
+    if (a.extra.z >= 0 && b.extra.z >= 0)
+       || (a.extra.z < 0 && b.extra.z < 0)
+    then if a.extra.z < b.extra.z
+         then (a, aux_a)
+         else (b, aux_b)
+    -- Note: In some cases the condition below can be too restrictive: We might
+    -- want to prioritize showing pixels with negative z values over showing an
+    -- empty backgroun (f32.inf).  However, in the general case we can't know if
+    -- there are any non-background (z < f32.inf) positive-z pixels between the
+    -- current z and the background, so the safe approach is to restrict this a
+    -- lot.  This will show if you're rendering a single plane and zooming
+    -- really close onto it.
+    else if a.extra.z >= 0
     then (a, aux_a)
     else (b, aux_b)
 
-  let empty = ({extra={i= -1, z= -f32.inf},
+  let empty = ({extra={i= -1, z= f32.inf},
                 bary={u= -1, v= -1}}, aux_empty)
   in reduce_by_index_2d (replicate h (replicate w empty))
                         z_check empty coordinates points

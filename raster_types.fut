@@ -22,7 +22,8 @@ type triangle_projected_with_bary =
 
 type slope_point = base_component {x: i32, z_inv: f32, world: vec3.vector}
 type slope = base_component {x: f32}
-type triangle_slopes = {n_lines: i32,
+type triangle_slopes = {i_start: i32,
+                        n_lines: i32,
                         y: i32,
                         y_subtracted_p_y: {q: i32, r: i32},
                         p: slope_point,
