@@ -7,6 +7,7 @@ import "rendering"
 
 module generators = {
   module terrain = import "generators/terrain"
+  module city = import "generators/city"
 }
 
 type keys_state = {shift: bool, alt: bool, ctrl: bool, down: bool, up: bool, left: bool, right: bool,
@@ -37,16 +38,19 @@ module pixel_color_picker = {
 
 module generator_picker = {
   type generator_kind = #terrain
+                      | #city
 
-  def n_generator_kinds = 1i32
+  def n_generator_kinds = 2i32
 
   def generator_id (kind: generator_kind): i32 =
     match kind
     case #terrain -> 0
+    case #city -> 1
 
   def generator_kind (i: i32): generator_kind =
     match i
     case 0 -> #terrain
+    case 1 -> #city
     case _ -> assert false #terrain
 }
 
@@ -80,7 +84,7 @@ module lys: lys with text_content = text_content = {
                        ++ "View distance (FOV): %.1f\n"
                        ++ "Draw distance: %.1f\n"
                        ++ "Navigation: %[Mouse|Keyboard]\n"
-                       ++ "Generator: %[terrain]\n"
+                       ++ "Generator: %[terrain|city]\n"
                        ++ "Pixel color: By %[triangle|depth|height]"
 
   def text_content (fps: f32) (s: state): text_content =
@@ -102,6 +106,8 @@ module lys: lys with text_content = text_content = {
     match kind
     case #terrain ->
       generators.terrain.generate 1000 1000 300 100000 64 3 seed
+    case #city ->
+      generators.city.generate seed
 
   def project_triangles_in_view_from_state (s: state) (camera: camera_quaternion) =
     project_triangles_in_view s.h s.w s.view_dist s.draw_dist (camera_to_euler camera) s.triangles_coloured.0
