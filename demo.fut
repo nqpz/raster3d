@@ -119,13 +119,15 @@ module lys: lys with text_content = text_content = {
       def empty_aux = ()
       def triangles_aux [n] (_: [n]triangle_slopes): [n]() = replicate n ()
       def pixel_color (y_min: f32) (y_span: f32) (draw_dist: f32) (ts: []triangle_slopes) ((p, _aux): (pixel_final, ())): argb.colour =
-        let h = if p.extra.i == -1
-                then 0
-                else let t = ts[p.extra.i]
-                     let world_y = interpolate p.bary t (.extra.world.y)
-                     let f = (world_y - y_min) / y_span
-                     in 360 * f
-        in hsv_to_rgb (h, 1 - pixel_depth draw_dist p.extra.z, 0.5)
+        if p.extra.z == f32.inf
+        then argb.white
+        else let h = if p.extra.i == -1
+                     then 0
+                     else let t = ts[p.extra.i]
+                          let world_y = interpolate p.bary t (.extra.world.y)
+                          let f = (world_y - y_min) / y_span
+                          in 360 * f
+             in hsv_to_rgb (h, 1 - pixel_depth draw_dist p.extra.z, 0.5)
     }
   }
 
