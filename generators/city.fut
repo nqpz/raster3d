@@ -16,7 +16,7 @@ def rectangle (x0: f32) (y0: f32) (w: f32) (h: f32): [2]triangle =
   let t1 = (p1, p2, p3)
   in [t0, t1]
 
-def generate (seed: i32): ([](triangle, argb.colour), (f32, f32)) =
+def generate (_seed: i32): ([](triangle, argb.colour), (f32, f32)) =
   let r =
     rectangle (-100) (-100) 200 200
     |> map (translate_triangle {x=0, y=0, z=100})
