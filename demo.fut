@@ -34,17 +34,35 @@ module pixel_color_picker = {
     case _ -> assert false #by_triangle
 }
 
+module generator_picker = {
+  type generator_kind = #terrain
+
+  def n_generator_kinds = 1i32
+
+  def generator_id (kind: generator_kind): i32 =
+    match kind
+    case #terrain -> 0
+
+  def generator_kind (i: i32): generator_kind =
+    match i
+    case 0 -> #terrain
+    case _ -> assert false #terrain
+}
+
+
 def camera_to_euler (camera: camera_quaternion): camera =
   {position=camera.position,
    orientation = qe_conversions.quaternion_to_euler camera.orientation}
 
-type text_content = (i32, i64, i64, f32, f32, f32, f32, f32, f32, f32, f32, f32, i32, i32)
+type text_content = (i32, i64, i64, f32, f32, f32, f32, f32, f32, f32, f32, f32, i32, i32, i32)
 module lys: lys with text_content = text_content = {
   type~ state = {h: i64, w: i64,
+                 seed: i32,
                  view_dist: f32, -- another way of expressing the FOV
                  draw_dist: f32,
                  camera: camera_quaternion,
                  is_still: bool,
+                 generator_kind: generator_picker.generator_kind,
                  triangles_coloured: ([](triangle, argb.colour), (f32, f32)),
                  triangles_in_view: [](triangle_slopes, argb.colour),
                  keys: keys_state,
@@ -61,6 +79,7 @@ module lys: lys with text_content = text_content = {
                        ++ "View distance (FOV): %.1f\n"
                        ++ "Draw distance: %.1f\n"
                        ++ "Navigation: %[Mouse|Keyboard]\n"
+                       ++ "Generator: %[terrain]\n"
                        ++ "Pixel color: By %[triangle|depth|height]"
 
   def text_content (fps: f32) (s: state): text_content =
@@ -71,11 +90,20 @@ module lys: lys with text_content = text_content = {
      (match s.navigation
       case #mouse -> 0
       case #keyboard -> 1),
+     generator_picker.generator_id s.generator_kind,
      pixel_color_picker.pixel_color_id s.pixel_color_approach)
 
   def text_colour = const argb.black
 
   def grab_mouse = true
+
+  def generate (seed: i32) (kind: generator_picker.generator_kind) =
+    match kind
+    case #terrain ->
+      generators.terrain.generate 1000 1000 300 100000 64 3 seed
+
+  def project_triangles_in_view_from_state (s: state) (camera: camera_quaternion) =
+    project_triangles_in_view s.h s.w s.view_dist s.draw_dist (camera_to_euler camera) s.triangles_coloured.0
 
   def init (seed: u32) (h: i64) (w: i64): state =
     let seed = i32.u32 seed
@@ -84,15 +112,16 @@ module lys: lys with text_content = text_content = {
     let camera = {position={x=150000, y= -4000, z=100000},
                   orientation=qe_conversions.euler_to_quaternion vec3.zero}
 
-    let triangles_coloured = generators.terrain.generate 1000 1000 300 100000 64 3 seed
-    let triangles_in_view = project_triangles_in_view h w view_dist draw_dist
-                                                      (camera_to_euler camera) triangles_coloured.0
-    in {w, h,
-        view_dist, draw_dist, camera, is_still=false,
-        triangles_coloured, triangles_in_view,
-        keys={shift=false, alt=false, ctrl=false, down=false, up=false, left=false, right=false,
-              pagedown=false, pageup=false, space=false},
-       navigation=#mouse, pixel_color_approach=#by_triangle}
+    let generator_kind = #terrain
+    let triangles_coloured = generate seed generator_kind
+
+    let s = {w, h, seed,
+             view_dist, draw_dist, camera, is_still=false,
+             generator_kind, triangles_coloured, triangles_in_view=[],
+             keys={shift=false, alt=false, ctrl=false, down=false, up=false, left=false, right=false,
+                   pagedown=false, pageup=false, space=false},
+             navigation=#mouse, pixel_color_approach=#by_triangle}
+    in s with triangles_in_view = project_triangles_in_view_from_state s camera
 
   def resize (h: i64) (w: i64) (s: state) =
     s with h = h with w = w
@@ -188,8 +217,7 @@ module lys: lys with text_content = text_content = {
          with draw_dist = draw_dist'
          with is_still = !camera_changes
          with triangles_in_view = if camera_changes || !s.is_still
-                                  then project_triangles_in_view s.h s.w s.view_dist s.draw_dist
-                                                                 (camera_to_euler camera') s.triangles_coloured.0
+                                  then project_triangles_in_view_from_state s camera'
                                   else s.triangles_in_view
 
   def mouse ((x, y): (i32, i32)) (s: state): state =
@@ -245,6 +273,13 @@ module lys: lys with text_content = text_content = {
            else s with navigation = match s.navigation
                                     case #mouse -> #keyboard
                                     case #keyboard -> #mouse
+      else if key == SDLK_g
+      then let generator_kind = generator_picker.generator_kind
+                                ((generator_picker.generator_id s.generator_kind + 1)
+                                 % generator_picker.n_generator_kinds)
+           let s = s with generator_kind = generator_kind
+                     with triangles_coloured = generate s.seed generator_kind
+           in s with triangles_in_view = project_triangles_in_view_from_state s s.camera
       else s with keys = change s.navigation key true s.keys
 
     def up (key: i32) (s: state): state =

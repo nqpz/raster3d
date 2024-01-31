@@ -25,6 +25,7 @@ Base controls:
 
   + Shift+other action: Move or turn faster
   + PageUp/PageDown: Increase/decrease draw distance
+  + g: Change generator
   + Tab: Change navigation controls (see below)
   + Ctrl+Tab: Change pixel coloring approach
   + F1: Toggle text
