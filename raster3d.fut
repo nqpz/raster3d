@@ -125,9 +125,7 @@ def render_projected_triangles [n] 'a
     (h: i64)
     (w: i64)
     (triangles_prepared: [n]triangle_slopes)
-    (pixel_color: pixel_color_function a)
-    (aux: [n]a)
-    (aux_empty: a): [h][w]argb.colour =
+    ((pixel_color, aux, aux_empty): pixel_color_items [n] a): [h][w]argb.colour =
   let aux' = zip (map i32.i64 (0..<n)) aux
   let points =
     lines_of_triangles w triangles_prepared aux'
