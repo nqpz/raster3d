@@ -90,7 +90,7 @@ module lys: lys with text_content = text_content = {
         triangles_coloured, triangles_in_view,
         keys={shift=false, alt=false, ctrl=false, down=false, up=false, left=false, right=false,
               pagedown=false, pageup=false, space=false},
-       navigation=#mouse, pixel_color_approach=#by_height}
+       navigation=#mouse, pixel_color_approach=#by_triangle}
 
   def resize (h: i64) (w: i64) (s: state) =
     s with h = h with w = w
