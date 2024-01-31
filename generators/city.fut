@@ -17,9 +17,13 @@ def rectangle (x0: f32) (y0: f32) (w: f32) (h: f32): [2]triangle =
   in [t0, t1]
 
 def generate (seed: i32): ([](triangle, argb.colour), (f32, f32)) =
-  let triangles =
+  let r =
     rectangle (-100) (-100) 200 200
-    |> map (translate_triangle {x=0, y=0, z=500})
+    |> map (translate_triangle {x=0, y=0, z=100})
+  let triangles =
+    flatten [ r
+            , r |> map (rotate_triangle (vec3.zero with y = f32.pi / 2) vec3.zero)
+            ]
 
   let colors = map (const (argb.gray 0.6)) triangles
 

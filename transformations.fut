@@ -44,3 +44,11 @@ def rotate_point_inv (angle: vec3.vector) (origo: vec3.vector)
                      (p: vec3.vector): vec3.vector =
   let r = rotations angle
   in rotate_point_base origo (r.x >-> r.z >-> r.y) p
+
+def rotate_triangle
+    (angle: vec3.vector) (origo: vec3.vector)
+    ((p, q, r): triangle)
+    : triangle =
+  (rotate_point angle origo p,
+   rotate_point angle origo q,
+   rotate_point angle origo r)
