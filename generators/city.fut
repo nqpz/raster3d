@@ -29,9 +29,7 @@ def cube (origo: vec3.vector) (size: f32): [6 * 2]triangle =
              ]
 
 def generate (_seed: i32): ([](triangle, argb.colour), (f32, f32)) =
-  let origo = vec3.zero
-  let size = 200
-  let triangles = cube origo size
+  let triangles = cube (vec3.zero with z = 500) 250
 
   let colors = map (const (argb.gray 0.6)) triangles
 
