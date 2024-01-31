@@ -48,9 +48,9 @@ def generate
     map (\(i: i64) ->
            let indent = (i % 2) * (size / 2)
            in map (\(j: i64) ->
-                     {x=f32.i64 (j * size + indent),
-                      y=0,
-                      z=f32.i64 i * size_vert}
+                     {x=f32.i64 (j * size + indent) - 150000,
+                      y=4000,
+                      z=f32.i64 i * size_vert - 100000}
                   ) (0..<width)
         ) (0..<depth)
 

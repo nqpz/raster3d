@@ -109,7 +109,7 @@ module lys: lys with text_content = text_content = {
     let seed = i32.u32 seed
     let view_dist = 600
     let draw_dist = 100000
-    let camera = {position={x=150000, y= -4000, z=100000},
+    let camera = {position=vec3.zero,
                   orientation=qe_conversions.euler_to_quaternion vec3.zero}
 
     let generator_kind = #terrain
