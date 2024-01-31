@@ -14,7 +14,6 @@ type point_projected_with_bary = base_component {projected: point_2d, z: f32, wo
 
 type point_projected_final = base_component point_2d
 
-type triangle = (vec3.vector, vec3.vector, vec3.vector)
 type triangle_projected =
   (point_projected, point_projected, point_projected)
 type triangle_projected_with_bary =

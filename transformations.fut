@@ -1,5 +1,11 @@
 import "types"
 
+def translate_triangle
+    (offset: vec3.vector)
+    ((p, q, r): triangle)
+    : triangle =
+  vec3.((p + offset, q + offset, r + offset))
+
 def rotate_x ({sin, cos}: trig)
              ({x, y, z}: vec3.vector): vec3.vector =
   {x,
