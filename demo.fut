@@ -91,27 +91,34 @@ module lys: lys with text_content = text_content = {
   def resize (h: i64) (w: i64) (s: state) =
     s with h = h with w = w
 
-  def render (s: state) =
-    let (triangles_slopes, colours) = unzip s.triangles_in_view
+  def render_triangles_in_view [n]
+    (s: state)
+    (triangles_in_view: [n](triangle_slopes, argb.colour)) =
+    let (h, w) = (s.h, s.w)
+    let (triangles_slopes, colours) = unzip triangles_in_view
+    let render_pci 'a (pci: pixel_color_items [n] a) =
+      render_projected_triangles h w triangles_slopes pci
     in match s.pixel_color_approach
-       case #by_triangle -> render_projected_triangles
-                            s.h s.w triangles_slopes
+       case #by_triangle -> render_pci
                             (pixel_color.by_triangle.pixel_color,
                              pixel_color.by_triangle.triangles_aux colours,
                              pixel_color.by_triangle.empty_aux)
-       case #by_depth -> render_projected_triangles
-                         s.h s.w triangles_slopes
+       case #by_depth -> render_pci
                          (pixel_color.by_depth.pixel_color s.draw_dist,
                           pixel_color.by_depth.triangles_aux triangles_slopes,
                           pixel_color.by_depth.empty_aux)
-       case #by_height -> render_projected_triangles
-                          s.h s.w triangles_slopes
-                          (pixel_color.by_height.pixel_color s.triangles_coloured.1.0
-                                                             (s.triangles_coloured.1.1 - s.triangles_coloured.1.0)
-                                                             s.draw_dist
-                                                             triangles_slopes,
+       case #by_height -> render_pci
+                          (pixel_color.by_height.pixel_color
+                           s.triangles_coloured.1.0
+                           (s.triangles_coloured.1.1 - s.triangles_coloured.1.0)
+                           s.draw_dist
+                           triangles_slopes,
+
                            pixel_color.by_height.triangles_aux triangles_slopes,
                            pixel_color.by_height.empty_aux)
+
+  def render (s: state) =
+    render_triangles_in_view s s.triangles_in_view
 
   def get_speed (delta: f32) (shift: bool): f32 =
     delta * if shift then 6 else 1
