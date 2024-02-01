@@ -35,6 +35,9 @@ module pixel_color = {
       else let h = if p.extra.i == -1
                    then 0
                    else let t = ts[p.extra.i]
+                        -- FIXME: This interpolation is affine and produces
+                        -- slightly wrong y values (think PlayStation 1
+                        -- graphics).
                         let world_y = interpolate p.bary t (.extra.world.y)
                         let f = (world_y - y_min) / y_span
                         in 360 * f
