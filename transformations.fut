@@ -52,3 +52,11 @@ def rotate_triangle
   (rotate_point angle origo p,
    rotate_point angle origo q,
    rotate_point angle origo r)
+
+def scale_point (scale: vec3.vector) (p: vec3.vector): vec3.vector =
+  scale vec3.* p
+
+def scale_triangle (scale: vec3.vector) ((p, q, r): triangle): triangle =
+  (scale_point scale p,
+   scale_point scale q,
+   scale_point scale r)

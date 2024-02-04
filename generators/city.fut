@@ -7,6 +7,8 @@ import "../hsv"
 module rnge = xorshift128plus
 module dist = uniform_real_distribution f32 rnge
 
+def vec3_one = {x=vec3.one, y=vec3.one, z=vec3.one}
+
 module shapes = {
   def rectangle (x0: f32) (y0: f32) (w: f32) (h: f32): [2]triangle =
     let p0 = {x=x0, y=y0, z=0}
@@ -31,7 +33,10 @@ module shapes = {
 }
 
 def generate (_seed: i32): ([](triangle, argb.colour), (f32, f32)) =
-  let triangles = shapes.cube (vec3.zero with z = 500) 250
+  let t = shapes.cube (vec3.zero with z = 500) 250
+          |> map (scale_triangle (vec3_one with y = 2))
+
+  let triangles = flatten (flatten (tabulate_2d 10 10 (\i j -> map (translate_triangle {x=f32.i64 i * 500, y=0, z=f32.i64 j * 500}) t)))
 
   let colors = map (const (argb.gray 0.6)) triangles
 
