@@ -17,16 +17,16 @@ module shapes = {
     let t1 = (p1, p2, p3)
     in [t0, t1]
 
-  def cube (origo: vec3.vector) (size: f32): [6 * 2]triangle =
+  def cube (center: vec3.vector) (size: f32): [6 * 2]triangle =
     let radius = size / 2
-    let r = rectangle (origo.x - radius) (origo.y - radius) size size
-            |> map (translate_triangle {x=0, y=0, z=origo.z + radius})
+    let r = rectangle (center.x - radius) (center.y - radius) size size
+            |> map (translate_triangle {x=0, y=0, z=center.z + radius})
     in flatten [ r
-               , r |> map (rotate_triangle (vec3.zero with y = f32.pi) origo)
-               , r |> map (rotate_triangle (vec3.zero with y = f32.pi * 0.5) origo)
-               , r |> map (rotate_triangle (vec3.zero with y = f32.pi * 1.5) origo)
-               , r |> map (rotate_triangle (vec3.zero with x = f32.pi * 0.5) origo)
-               , r |> map (rotate_triangle (vec3.zero with x = f32.pi * 1.5) origo)
+               , r |> map (rotate_triangle (vec3.zero with y = f32.pi) center)
+               , r |> map (rotate_triangle (vec3.zero with y = f32.pi * 0.5) center)
+               , r |> map (rotate_triangle (vec3.zero with y = f32.pi * 1.5) center)
+               , r |> map (rotate_triangle (vec3.zero with x = f32.pi * 0.5) center)
+               , r |> map (rotate_triangle (vec3.zero with x = f32.pi * 1.5) center)
                ]
 }
 
