@@ -21,11 +21,12 @@ def generate (seed: i32): (([](triangle, argb.colour), (f32, f32)), f32) =
                            let rng = rnge.join_rng [ rnge.rng_from_seed [i32.i64 i]
                                                    , rnge.rng_from_seed [i32.i64 j]
                                                    , main_rng ]
-                           let (_rng, hf) = dist.rand (2, 5) rng
+                           let (rng, hf) = dist.rand (2, 5) rng
+                           let (_rng, gf) = dist.rand (0.2, 0.8) rng
                            let ts = copy t
                                     |> scale (vec3_one with y = hf)
                                     |> translate {x=f32.i64 i * 2 * base, y=0, z=f32.i64 j * 2 * base}
-                           let colors = map (const (argb.gray 0.6)) ts
+                           let colors = map (const (argb.gray gf)) ts
                            in zip ts colors)
     |> flatten
     |> flatten
