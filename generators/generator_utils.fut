@@ -14,7 +14,7 @@ module transf = {
 module shape = {
   open transf
 
-  def rectangle: [2]triangle =
+  def square: [2]triangle =
     let p0 = {x= -0.5, y= -0.5, z=0}
     let p1 = {x=  0.5, y= -0.5, z=0}
     let p2 = {x= -0.5, y=  0.5, z=0}
@@ -24,7 +24,7 @@ module shape = {
     in [t0, t1]
 
   def cube: [6 * 2]triangle =
-    let r = rectangle |> translate {x=0, y=0, z=0.5}
+    let r = square |> translate {x=0, y=0, z=0.5}
     in flatten [ r
                , r |> rotate (vec3.zero with y = f32.pi)
                , r |> rotate (vec3.zero with y = f32.pi * 0.5)
