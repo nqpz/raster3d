@@ -99,7 +99,7 @@ module lys: lys with text_content = text_content = {
      generator_picker.generator_id s.generator_kind,
      pixel_color_picker.pixel_color_id s.pixel_color_approach)
 
-  def text_colour = const argb.black
+  def text_colour = const argb.white
 
   def grab_mouse = true
 
