@@ -8,9 +8,11 @@ module dist = uniform_real_distribution f32 rnge
 
 open transf
 
+def n = 50i64
+def base = 1000f32
+def regen_threshold = base * f32.i64 n / 2
+
 def generate (pos: vec3.vector) (seed: i32): (([](triangle, argb.colour), (f32, f32)), f32) =
-  let n = 50
-  let base = 1000
   let base' = 2 * base
   let t = shape.cube
           |> scale (vec3_same base)
@@ -42,5 +44,5 @@ def generate (pos: vec3.vector) (seed: i32): (([](triangle, argb.colour), (f32, 
   in ((triangles_coloured, (y_min, y_max)), 2 * 10**7)
 
 def needs_regeneration (old_pos: vec3.vector) (cur_pos: vec3.vector): bool =
-  f32.abs (cur_pos.x - old_pos.x) > 1000 * 25
-  || f32.abs (cur_pos.z - old_pos.z) > 1000 * 25
+  f32.abs (cur_pos.x - old_pos.x) > regen_threshold
+  || f32.abs (cur_pos.z - old_pos.z) > regen_threshold
