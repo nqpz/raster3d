@@ -70,6 +70,7 @@ module lys: lys with text_content = text_content = {
                  generator_kind: generator_picker.generator_kind,
                  triangles_coloured: ([](triangle, argb.colour), (f32, f32)),
                  triangles_in_view: [](triangle_slopes, argb.colour),
+                 flashlight_brightness: f32,
                  keys: keys_state,
                  navigation: navigation,
                  pixel_color_approach: pixel_color_picker.pixel_color_approach}
@@ -119,12 +120,13 @@ module lys: lys with text_content = text_content = {
     let camera = {position=vec3.zero,
                   orientation=qe_conversions.euler_to_quaternion vec3.zero}
 
-    let generator_kind = #terrain
-    let triangles_coloured = generate seed generator_kind
+    let generator_kind = #city
+    let (triangles_coloured, flashlight_brightness) = generate seed generator_kind
 
     let s = {w, h, seed,
              view_dist, draw_dist, camera, is_still=false,
              generator_kind, triangles_coloured, triangles_in_view=[],
+             flashlight_brightness,
              keys={shift=false, alt=false, ctrl=false, down=false, up=false, left=false, right=false,
                    pagedown=false, pageup=false, space=false},
              navigation=#mouse, pixel_color_approach=#by_triangle}
@@ -142,7 +144,7 @@ module lys: lys with text_content = text_content = {
       render_projected_triangles h w triangles_slopes pci
     in match s.pixel_color_approach
        case #by_triangle -> render_pci
-                            (pixel_color.by_triangle.pixel_color,
+                            (pixel_color.by_triangle.pixel_color s.view_dist s.flashlight_brightness,
                              pixel_color.by_triangle.triangles_aux colours,
                              pixel_color.by_triangle.empty_aux)
        case #by_depth -> render_pci
@@ -284,8 +286,10 @@ module lys: lys with text_content = text_content = {
       then let generator_kind = generator_picker.generator_kind
                                 ((generator_picker.generator_id s.generator_kind + 1)
                                  % generator_picker.n_generator_kinds)
+           let (triangles_coloured, flashlight_brightness) = generate s.seed generator_kind
            let s = s with generator_kind = generator_kind
-                     with triangles_coloured = generate s.seed generator_kind
+                     with triangles_coloured = triangles_coloured
+                     with flashlight_brightness = flashlight_brightness
            in s with triangles_in_view = project_triangles_in_view_from_state s s.camera
       else s with keys = change s.navigation key true s.keys
 

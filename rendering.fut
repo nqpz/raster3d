@@ -14,7 +14,9 @@ module pixel_color = {
     type aux = argb.colour
     def empty_aux = argb.white
     def triangles_aux colors = colors
-    def pixel_color ((_p, color): (pixel_final, argb.colour)): argb.colour = color
+    def pixel_color (view_dist: f32) (flashlight_brightness: f32) ((p, color): (pixel_final, argb.colour)): argb.colour =
+      let v_factor = f32.min 1.0 (flashlight_brightness / ((p.extra.z + view_dist) ** 2.0))
+      in argb.mix v_factor color (1 - v_factor) argb.black
   }
 
   module by_depth = {

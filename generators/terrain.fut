@@ -40,7 +40,7 @@ def generate
   (fluct: f32)
   (smooth_iterations_areas: i32)
   (smooth_iterations_colours: i32)
-  (seed: i32): ([](triangle, argb.colour), (f32, f32)) =
+  (seed: i32): (([](triangle, argb.colour), (f32, f32)), f32) =
 
   -- Generate points.
   let size_vert = f32.i64 size / 2 ** 0.5
@@ -134,7 +134,7 @@ def generate
   let ys = flatten (map (\(p, q, r) -> [p.y, q.y, r.y]) triangles)
   let y_min = reduce f32.min f32.inf ys
   let y_max = reduce f32.max (-f32.inf) ys
-  in (zip triangles colors, (y_min, y_max))
+  in ((zip triangles colors, (y_min, y_max)), 2 * 10**8)
 
 -- ==
 -- entry: benchmark
@@ -147,6 +147,6 @@ entry benchmark
   (smooth_iterations_areas: i32)
   (smooth_iterations_colours: i32)
   (seed: i32): ([]triangle, []argb.colour, f32, f32) =
-  let (a, b) = generate depth width size fluct smooth_iterations_areas smooth_iterations_colours seed
+  let ((a, b), _) = generate depth width size fluct smooth_iterations_areas smooth_iterations_colours seed
   let (a0, a1) = unzip a
   in (a0, a1, b.0, b.1)
