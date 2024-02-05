@@ -11,18 +11,18 @@ def vec3_same f = {x=f, y=f, z=f}
 def vec3_one = vec3_same vec3.one
 
 module shapes = {
-  def rectangle (x0: f32) (y0: f32) (w: f32) (h: f32): [2]triangle =
-    let p0 = {x=x0, y=y0, z=0}
-    let p1 = {x=x0 + w, y=y0, z=0}
-    let p2 = {x=x0, y=y0 + h, z=0}
-    let p3 = {x=x0 + w, y=y0 + h, z=0}
+  def rectangle: [2]triangle =
+    let p0 = {x= -0.5, y= -0.5, z=0}
+    let p1 = {x=  0.5, y= -0.5, z=0}
+    let p2 = {x= -0.5, y=  0.5, z=0}
+    let p3 = {x=  0.5, y=  0.5, z=0}
     let t0 = (p0, p1, p2)
     let t1 = (p1, p2, p3)
     in [t0, t1]
 
   def cube: [6 * 2]triangle =
     let center = vec3.zero
-    let r = rectangle (-0.5) (-0.5) 1 1
+    let r = rectangle
             |> map (translate_triangle {x=0, y=0, z=0.5})
     in flatten [ r
                , r |> map (rotate_triangle (vec3.zero with y = f32.pi) center)
