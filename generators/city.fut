@@ -8,24 +8,26 @@ module dist = uniform_real_distribution f32 rnge
 
 open transf
 
-def n = 50i64
+def n = 100i64
 def base = 1000f32
 def regen_threshold = base * f32.i64 n / 2
 
 def generate (pos: vec3.vector) (seed: i32): (([](triangle, argb.colour), (f32, f32)), f32) =
   let base' = 2 * base
+  let (i_offset, j_offset) = (t32 (pos.x / base') - i32.i64 n / 2,
+                              t32 (pos.z / base') - i32.i64 n / 2)
   let t = shape.cube
           |> scale (vec3_same base)
           |> translate (vec3.zero with y = -base / 2 with z = base')
-          |> translate (vec3.zero with x = (pos.x - pos.x f32.% base') - base * f32.i64 n
-                                  with z = (pos.z - pos.z f32.% base') - base * f32.i64 n)
+          |> translate (vec3.zero with x = base' * r32 i_offset
+                                  with z = base' * r32 j_offset)
 
   let main_rng = rnge.rng_from_seed [seed]
 
   let triangles_coloured =
     tabulate_2d n n (\i j ->
-                       let rng = rnge.join_rng [ rnge.rng_from_seed [i32.i64 i]
-                                               , rnge.rng_from_seed [i32.i64 j]
+                       let rng = rnge.join_rng [ rnge.rng_from_seed [i32.i64 i + i_offset]
+                                               , rnge.rng_from_seed [i32.i64 j + j_offset]
                                                , main_rng ]
                        let (rng, hf) = dist.rand (2, 5) rng
                        let (_rng, gf) = dist.rand (0.2, 0.8) rng
