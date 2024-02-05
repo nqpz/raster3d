@@ -18,9 +18,6 @@ def generate (pos: vec3.vector) (seed: i32): (([](triangle, argb.colour), (f32, 
                               t32 (pos.z / base') - i32.i64 n / 2)
   let t = shape.cube
           |> scale (vec3_same base)
-          |> translate (vec3.zero with y = -base / 2 with z = base')
-          |> translate (vec3.zero with x = base' * r32 i_offset
-                                  with z = base' * r32 j_offset)
 
   let main_rng = rnge.rng_from_seed [seed]
 
@@ -32,9 +29,14 @@ def generate (pos: vec3.vector) (seed: i32): (([](triangle, argb.colour), (f32, 
                        let (rng, hf) = dist.rand (2, 5) rng
                        let (rng, gf) = dist.rand (0.2, 0.8) rng
                        let (rng, x_offset) = dist.rand (-base / 10, base / 10) rng
-                       let (_rng, z_offset) = dist.rand (-base / 10, base / 10) rng
+                       let (rng, z_offset) = dist.rand (-base / 10, base / 10) rng
+                       let (_rng, angle) = dist.rand (-0.05, 0.05) rng
                        let ts = copy t
                                 |> scale (vec3_one with y = hf)
+                                |> rotate (vec3.zero with y = angle)
+                                |> translate (vec3.zero with y = -base / 2 with z = base')
+                                |> translate (vec3.zero with x = base' * r32 i_offset
+                                                        with z = base' * r32 j_offset)
                                 |> translate {x=x_offset + f32.i64 i * base',
                                               y=base * 6,
                                               z=z_offset + f32.i64 j * base'}
