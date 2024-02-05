@@ -17,7 +17,7 @@ def generate (_seed: i32): (([](triangle, argb.colour), (f32, f32)), f32) =
           |> scale (vec3_one with y = 2)
 
   let triangles =
-    tabulate_2d 10 10 (\i j -> translate {x=f32.i64 i * 2 * base, y=0, z=f32.i64 j * 2 * base} t)
+    tabulate_2d 100 100 (\i j -> translate {x=f32.i64 i * 2 * base, y=0, z=f32.i64 j * 2 * base} t)
     |> flatten
     |> flatten
 
