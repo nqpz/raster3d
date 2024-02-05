@@ -40,6 +40,7 @@ def generate
   (fluct: f32)
   (smooth_iterations_areas: i32)
   (smooth_iterations_colours: i32)
+  (_pos: vec3.vector)
   (seed: i32): (([](triangle, argb.colour), (f32, f32)), f32) =
 
   -- Generate points.
@@ -147,6 +148,6 @@ entry benchmark
   (smooth_iterations_areas: i32)
   (smooth_iterations_colours: i32)
   (seed: i32): ([]triangle, []argb.colour, f32, f32) =
-  let ((a, b), _) = generate depth width size fluct smooth_iterations_areas smooth_iterations_colours seed
+  let ((a, b), _) = generate depth width size fluct smooth_iterations_areas smooth_iterations_colours vec3.zero seed
   let (a0, a1) = unzip a
   in (a0, a1, b.0, b.1)

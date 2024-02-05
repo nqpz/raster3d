@@ -8,7 +8,7 @@ module dist = uniform_real_distribution f32 rnge
 
 open transf
 
-def generate (seed: i32): (([](triangle, argb.colour), (f32, f32)), f32) =
+def generate (_pos: vec3.vector) (seed: i32): (([](triangle, argb.colour), (f32, f32)), f32) =
   let base = 1000
   let t = shape.cube
           |> scale (vec3_same base)

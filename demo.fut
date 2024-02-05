@@ -103,12 +103,12 @@ module lys: lys with text_content = text_content = {
 
   def grab_mouse = true
 
-  def generate (seed: i32) (kind: generator_picker.generator_kind) =
+  def generate (pos: vec3.vector) (seed: i32) (kind: generator_picker.generator_kind) =
     match kind
     case #terrain ->
-      generators.terrain.generate 1000 1000 300 100000 64 3 seed
+      generators.terrain.generate 1000 1000 300 100000 64 3 pos seed
     case #city ->
-      generators.city.generate seed
+      generators.city.generate pos seed
 
   def project_triangles_in_view_from_state (s: state) (camera: camera_quaternion) =
     project_triangles_in_view s.h s.w s.view_dist s.draw_dist (camera_to_euler camera) s.triangles_coloured.0
@@ -121,7 +121,7 @@ module lys: lys with text_content = text_content = {
                   orientation=qe_conversions.euler_to_quaternion vec3.zero}
 
     let generator_kind = #city
-    let (triangles_coloured, flashlight_brightness) = generate seed generator_kind
+    let (triangles_coloured, flashlight_brightness) = generate camera.position seed generator_kind
 
     let s = {w, h, seed,
              view_dist, draw_dist, camera, is_still=false,
@@ -286,7 +286,7 @@ module lys: lys with text_content = text_content = {
       then let generator_kind = generator_picker.generator_kind
                                 ((generator_picker.generator_id s.generator_kind + 1)
                                  % generator_picker.n_generator_kinds)
-           let (triangles_coloured, flashlight_brightness) = generate s.seed generator_kind
+           let (triangles_coloured, flashlight_brightness) = generate s.camera.position s.seed generator_kind
            let s = s with generator_kind = generator_kind
                      with triangles_coloured = triangles_coloured
                      with flashlight_brightness = flashlight_brightness
