@@ -66,6 +66,7 @@ module lys: lys with text_content = text_content = {
                  view_dist: f32, -- another way of expressing the FOV
                  draw_dist: f32,
                  camera: camera_quaternion,
+                 prev_gen_camera_position: vec3.vector,
                  is_still: bool,
                  generator_kind: generator_picker.generator_kind,
                  triangles_coloured: ([](triangle, argb.colour), (f32, f32)),
@@ -131,7 +132,7 @@ module lys: lys with text_content = text_content = {
     let (triangles_coloured, flashlight_brightness) = generate camera.position seed generator_kind
 
     let s = {w, h, seed,
-             view_dist, draw_dist, camera, is_still=false,
+             view_dist, draw_dist, camera, prev_gen_camera_position=camera.position, is_still=false,
              generator_kind, triangles_coloured, triangles_in_view=[],
              flashlight_brightness,
              keys={shift=false, alt=false, ctrl=false, down=false, up=false, left=false, right=false,
@@ -229,12 +230,21 @@ module lys: lys with text_content = text_content = {
                      else if s.keys.pagedown
                      then s.draw_dist - 5 * speed
                      else s.draw_dist
-    in s with camera = camera'
-         with draw_dist = draw_dist'
-         with is_still = !camera_changes
-         with triangles_in_view = if camera_changes || !s.is_still
-                                  then project_triangles_in_view_from_state s camera'
-                                  else s.triangles_in_view
+    let movement = camera_changes || !s.is_still
+    let s =
+      s with camera = camera'
+        with draw_dist = draw_dist'
+        with is_still = !camera_changes
+    let s =
+      if movement && needs_regeneration s.prev_gen_camera_position s.camera.position s.generator_kind
+      then let (triangles_coloured, flashlight_brightness) = generate s.camera.position s.seed s.generator_kind
+           in s with triangles_coloured = triangles_coloured
+                with flashlight_brightness = flashlight_brightness
+                with prev_gen_camera_position = s.camera.position
+      else s
+    in if movement
+       then s with triangles_in_view = project_triangles_in_view_from_state s camera'
+       else s
 
   def mouse ((x, y): (i32, i32)) (s: state): state =
     match s.navigation
