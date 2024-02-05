@@ -10,6 +10,15 @@ module dist = uniform_real_distribution f32 rnge
 def vec3_same f = {x=f, y=f, z=f}
 def vec3_one = vec3_same vec3.one
 
+module transformations = {
+  def rotate' angle origo = map (rotate_triangle angle origo)
+  def rotate angle = rotate' angle vec3.zero
+  def translate offset = map (translate_triangle offset)
+  def scale s = map (scale_triangle s)
+}
+
+open transformations
+
 module shapes = {
   def rectangle: [2]triangle =
     let p0 = {x= -0.5, y= -0.5, z=0}
@@ -21,25 +30,23 @@ module shapes = {
     in [t0, t1]
 
   def cube: [6 * 2]triangle =
-    let center = vec3.zero
-    let r = rectangle
-            |> map (translate_triangle {x=0, y=0, z=0.5})
+    let r = rectangle |> translate {x=0, y=0, z=0.5}
     in flatten [ r
-               , r |> map (rotate_triangle (vec3.zero with y = f32.pi) center)
-               , r |> map (rotate_triangle (vec3.zero with y = f32.pi * 0.5) center)
-               , r |> map (rotate_triangle (vec3.zero with y = f32.pi * 1.5) center)
-               , r |> map (rotate_triangle (vec3.zero with x = f32.pi * 0.5) center)
-               , r |> map (rotate_triangle (vec3.zero with x = f32.pi * 1.5) center)
+               , r |> rotate (vec3.zero with y = f32.pi)
+               , r |> rotate (vec3.zero with y = f32.pi * 0.5)
+               , r |> rotate (vec3.zero with y = f32.pi * 1.5)
+               , r |> rotate (vec3.zero with x = f32.pi * 0.5)
+               , r |> rotate (vec3.zero with x = f32.pi * 1.5)
                ]
 }
 
 def generate (_seed: i32): (([](triangle, argb.colour), (f32, f32)), f32) =
   let t = shapes.cube
-          |> map (scale_triangle (vec3_same 1000))
-          |> map (translate_triangle (vec3.zero with y = -0.5 with z = 2000))
-          |> map (scale_triangle (vec3_one with y = 2))
+          |> scale (vec3_same 1000)
+          |> translate (vec3.zero with y = -0.5 with z = 2000)
+          |> scale (vec3_one with y = 2)
 
-  let triangles = flatten (flatten (tabulate_2d 10 10 (\i j -> map (translate_triangle {x=f32.i64 i * 2000, y=0, z=f32.i64 j * 2000}) t)))
+  let triangles = flatten (flatten (tabulate_2d 10 10 (\i j -> translate {x=f32.i64 i * 2000, y=0, z=f32.i64 j * 2000} t)))
 
   let colors = map (const (argb.gray 0.6)) triangles
 
