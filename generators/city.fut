@@ -8,11 +8,13 @@ module dist = uniform_real_distribution f32 rnge
 
 open transf
 
-def generate (_pos: vec3.vector) (seed: i32): (([](triangle, argb.colour), (f32, f32)), f32) =
+def generate (pos: vec3.vector) (seed: i32): (([](triangle, argb.colour), (f32, f32)), f32) =
   let base = 1000
   let t = shape.cube
           |> scale (vec3_same base)
           |> translate (vec3.zero with y = -base / 2 with z = 2 * base)
+          |> translate (vec3.zero with x = (pos.x - pos.x f32.% (2 * base)) - 2 * base * 50
+                                  with z = (pos.z - pos.z f32.% (2 * base)) - 2 * base * 50)
 
   let main_rng = rnge.rng_from_seed [seed]
 
