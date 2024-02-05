@@ -10,12 +10,16 @@ module dist = uniform_real_distribution f32 rnge
 open transf
 
 def generate (_seed: i32): (([](triangle, argb.colour), (f32, f32)), f32) =
+  let base = 1000
   let t = shape.cube
-          |> scale (vec3_same 1000)
-          |> translate (vec3.zero with y = -0.5 with z = 2000)
+          |> scale (vec3_same base)
+          |> translate (vec3.zero with y = -0.5 with z = 2 * base)
           |> scale (vec3_one with y = 2)
 
-  let triangles = flatten (flatten (tabulate_2d 10 10 (\i j -> translate {x=f32.i64 i * 2000, y=0, z=f32.i64 j * 2000} t)))
+  let triangles =
+    tabulate_2d 10 10 (\i j -> translate {x=f32.i64 i * 2 * base, y=0, z=f32.i64 j * 2 * base} t)
+    |> flatten
+    |> flatten
 
   let colors = map (const (argb.gray 0.6)) triangles
 
