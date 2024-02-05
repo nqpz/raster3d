@@ -31,7 +31,7 @@ def generate (pos: vec3.vector) (seed: i32): (([](triangle, argb.colour), (f32, 
                        let (_rng, gf) = dist.rand (0.2, 0.8) rng
                        let ts = copy t
                                 |> scale (vec3_one with y = hf)
-                                |> translate {x=f32.i64 i * base', y=0, z=f32.i64 j * base'}
+                                |> translate {x=f32.i64 i * base', y= base * 6, z=f32.i64 j * base'}
                        let colors = map (const (argb.gray gf)) ts
                        in zip ts colors)
     |> flatten
