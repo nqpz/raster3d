@@ -7,7 +7,8 @@ import "../hsv"
 module rnge = xorshift128plus
 module dist = uniform_real_distribution f32 rnge
 
-def vec3_one = {x=vec3.one, y=vec3.one, z=vec3.one}
+def vec3_same f = {x=f, y=f, z=f}
+def vec3_one = vec3_same vec3.one
 
 module shapes = {
   def rectangle (x0: f32) (y0: f32) (w: f32) (h: f32): [2]triangle =
@@ -19,10 +20,10 @@ module shapes = {
     let t1 = (p1, p2, p3)
     in [t0, t1]
 
-  def cube (center: vec3.vector) (size: f32): [6 * 2]triangle =
-    let radius = size / 2
-    let r = rectangle (center.x - radius) (center.y - radius) size size
-            |> map (translate_triangle {x=0, y=0, z=center.z + radius})
+  def cube: [6 * 2]triangle =
+    let center = vec3.zero
+    let r = rectangle (-0.5) (-0.5) 1 1
+            |> map (translate_triangle {x=0, y=0, z=0.5})
     in flatten [ r
                , r |> map (rotate_triangle (vec3.zero with y = f32.pi) center)
                , r |> map (rotate_triangle (vec3.zero with y = f32.pi * 0.5) center)
@@ -33,7 +34,9 @@ module shapes = {
 }
 
 def generate (_seed: i32): (([](triangle, argb.colour), (f32, f32)), f32) =
-  let t = shapes.cube (vec3.zero with z = 2000) 1000
+  let t = shapes.cube
+          |> map (scale_triangle (vec3_same 1000))
+          |> map (translate_triangle (vec3.zero with y = -0.5 with z = 2000))
           |> map (scale_triangle (vec3_one with y = 2))
 
   let triangles = flatten (flatten (tabulate_2d 10 10 (\i j -> map (translate_triangle {x=f32.i64 i * 2000, y=0, z=f32.i64 j * 2000}) t)))
