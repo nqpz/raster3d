@@ -40,3 +40,7 @@ def generate (pos: vec3.vector) (seed: i32): (([](triangle, argb.colour), (f32, 
   let y_max = reduce f32.max (-f32.inf) ys
 
   in ((triangles_coloured, (y_min, y_max)), 2 * 10**7)
+
+def needs_regeneration (old_pos: vec3.vector) (cur_pos: vec3.vector): bool =
+  f32.abs (cur_pos.x - old_pos.x) > 1000 * 25
+  || f32.abs (cur_pos.z - old_pos.z) > 1000 * 25

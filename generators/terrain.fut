@@ -137,6 +137,8 @@ def generate
   let y_max = reduce f32.max (-f32.inf) ys
   in ((zip triangles colors, (y_min, y_max)), 2 * 10**8)
 
+def needs_regeneration (_old_pos: vec3.vector) (_cur_pos: vec3.vector): bool = false
+
 -- ==
 -- entry: benchmark
 -- compiled input { 1000i64 1000i64 300i64 100000f32 64 3 0 }

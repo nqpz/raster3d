@@ -110,6 +110,13 @@ module lys: lys with text_content = text_content = {
     case #city ->
       generators.city.generate pos seed
 
+  def needs_regeneration (old_pos: vec3.vector) (cur_pos: vec3.vector) (kind: generator_picker.generator_kind) =
+    match kind
+    case #terrain ->
+      generators.terrain.needs_regeneration old_pos cur_pos
+    case #city ->
+      generators.city.needs_regeneration old_pos cur_pos
+
   def project_triangles_in_view_from_state (s: state) (camera: camera_quaternion) =
     project_triangles_in_view s.h s.w s.view_dist s.draw_dist (camera_to_euler camera) s.triangles_coloured.0
 
