@@ -4,7 +4,7 @@ import "../types"
 import "generator_utils"
 
 module rnge = xorshift128plus
-module dist = uniform_real_distribution f32 rnge
+module dist = uniform_real_distribution f32 u64 rnge
 
 open transf
 

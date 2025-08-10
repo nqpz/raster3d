@@ -4,7 +4,7 @@ import "../types"
 import "../hsv"
 
 module rnge = xorshift128plus
-module dist = uniform_real_distribution f32 rnge
+module dist = uniform_real_distribution f32 u64 rnge
 
 
 def hsv_average ((h0, s0, v0): hsv) ((h1, s1, v1): hsv): hsv =
